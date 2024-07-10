@@ -95,8 +95,8 @@ all: main-build
 main-build: F407VET6.elf secondary-outputs
 
 # Tool invocations
-F407VET6.elf F407VET6.map: $(OBJS) $(USER_OBJS) D:\workspace\F407VET6\STM32F407VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "F407VET6.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\workspace\F407VET6\STM32F407VETX_FLASH.ld" -Wl,-Map="F407VET6.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+F407VET6.elf F407VET6.map: $(OBJS) $(USER_OBJS) D:\ProjetsGit\STM32F407VET6\STM32F407VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "F407VET6.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\ProjetsGit\STM32F407VET6\STM32F407VETX_FLASH.ld" -Wl,-Map="F407VET6.map" -Wl,--gc-sections -static -L"D:\ProjetsGit\STM32F407VET6\Middlewares\ST\touchgfx\lib\core\cortex_m4f\gcc" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -128,6 +128,18 @@ static int8_t CDC_Receive_FS(uint8_t* pbuf, uint32_t *Len);
 static int8_t CDC_TransmitCplt_FS(uint8_t *pbuf, uint32_t *Len, uint8_t epnum);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
+
+#define TX_CIRCULAR_BUFFER_SIZE 1024
+#define RX_CIRCULAR_BUFFER_SIZE 1024
+#define MAX_PACKET_SIZE 32
+
+uint8_t tx_circular_buffer[TX_CIRCULAR_BUFFER_SIZE];
+uint32_t tx_write_index = 0; // Point d'écriture dans le buffer circulaire
+uint32_t tx_read_index = 0; // Point de lecture dans le buffer circulaire
+
+uint8_t rx_circular_buffer[RX_CIRCULAR_BUFFER_SIZE];
+uint32_t rx_write_index = 0; // Point d'écriture dans le buffer circulaire
+uint32_t rx_read_index = 0; // Point de lecture dans le buffer circulaire
 
 /* USER CODE END PRIVATE_FUNCTIONS_DECLARATION */
 
@@ -261,6 +273,16 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+	static uint8_t rxBuffer[RX_BUFFER_SIZE];
+	static uint32_t rxLength = 0;
+    // Copiez les données reçues dans rxBuffer
+    for (uint32_t i = 0; i < *Len; i++) {
+        rxBuffer[rxLength++] = Buf[i];
+        if (rxLength >= RX_BUFFER_SIZE) {
+            rxLength = 0; // ou traiter comme une erreur de dépassement
+        }
+    }
+
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
   return (USBD_OK);
@@ -316,6 +338,59 @@ static int8_t CDC_TransmitCplt_FS(uint8_t *Buf, uint32_t *Len, uint8_t epnum)
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
+int _write(int file, char *ptr, int len) {
+  for (int i = 0; i < len; i++) {
+	  uint32_t next_write_index = (tx_write_index + 1) % TX_CIRCULAR_BUFFER_SIZE;
+
+	  // Si le prochain indice d'écriture serait égal à l'indice de lecture, le buffer est plein
+	  if (next_write_index == tx_read_index) {
+	    return i; // Buffer plein, caractère perdu
+	  }
+
+	  tx_circular_buffer[tx_write_index] = ptr[i];
+	  tx_write_index = next_write_index;
+  }
+  return len;
+}
+
+void transmit_from_buffer(void) {
+  // Vérifiez si la transmission précédente est toujours en cours
+  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+  if (hcdc->TxState || tx_read_index == tx_write_index) {
+    return; // Ne faites rien si la transmission est en cours ou si le buffer est vide
+  }
+
+  uint32_t count;
+    if (tx_write_index > tx_read_index) {
+      count = tx_write_index - tx_read_index;
+    } else {
+      // Cas où les données s'enroulent autour de la fin du buffer
+      count = TX_CIRCULAR_BUFFER_SIZE - tx_read_index;
+    }
+
+    // Limitons à une taille de paquet si nécessaire (par exemple, la taille de paquet maximale USB)
+    if (count > MAX_PACKET_SIZE) {
+      count = MAX_PACKET_SIZE;
+    }
+
+    CDC_Transmit_FS(&tx_circular_buffer[tx_read_index], count);
+
+    tx_read_index = (tx_read_index + count) % TX_CIRCULAR_BUFFER_SIZE;
+}
+
+uint32_t CDC_DataAvailable() {
+    return (RX_CIRCULAR_BUFFER_SIZE + rx_write_index - rx_read_index) % RX_CIRCULAR_BUFFER_SIZE;
+}
+
+// Fonction pour récupérer des données du buffer circulaire
+uint32_t CDC_GetBufferData(uint8_t* dataOut, uint32_t dataLength) {
+    uint32_t i = 0;
+    while (i < dataLength && rx_read_index != rx_write_index) {
+        dataOut[i++] = rx_circular_buffer[rx_read_index];
+        rx_read_index = (rx_read_index + 1) % RX_CIRCULAR_BUFFER_SIZE;
+    }
+    return i;
+}
 
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 

@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -51,7 +51,7 @@
 #define APP_RX_DATA_SIZE  2048
 #define APP_TX_DATA_SIZE  2048
 /* USER CODE BEGIN EXPORTED_DEFINES */
-
+#define RX_BUFFER_SIZE  128
 /* USER CODE END EXPORTED_DEFINES */
 
 /**
@@ -108,7 +108,9 @@ extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-
+void transmit_from_buffer(void);
+uint32_t CDC_GetBufferData(uint8_t* dataOut, uint32_t dataLength);
+uint32_t CDC_DataAvailable();
 /* USER CODE END EXPORTED_FUNCTIONS */
 
 /**

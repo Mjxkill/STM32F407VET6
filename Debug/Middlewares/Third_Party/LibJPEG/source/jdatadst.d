@@ -41,7 +41,7 @@ Middlewares/Third_Party/LibJPEG/source/jdatadst.o: \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h \
- ../FATFS/Target/bsp_driver_sd.h \
+ ../FATFS/Target/bsp_driver_sd.h ../FATFS/Target/fatfs_platform.h \
  ../Middlewares/Third_Party/LibJPEG/include/jpeglib.h \
  ../LIBJPEG/Target/jmorecfg.h \
  ../Middlewares/Third_Party/LibJPEG/include/jerror.h
@@ -90,6 +90,7 @@ Middlewares/Third_Party/LibJPEG/source/jdatadst.o: \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h:
 ../FATFS/Target/bsp_driver_sd.h:
+../FATFS/Target/fatfs_platform.h:
 ../Middlewares/Third_Party/LibJPEG/include/jpeglib.h:
 ../LIBJPEG/Target/jmorecfg.h:
 ../Middlewares/Third_Party/LibJPEG/include/jerror.h:
